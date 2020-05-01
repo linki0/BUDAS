@@ -1,0 +1,34 @@
+server {
+	listen 80;
+	
+	root /nginx/www;
+	index index.php index.html index.htm;
+
+	server_name localhost;
+	
+	fastcgi_intercept_errors on;
+	
+	location / {
+		if (-e $request_filename.php) {
+			rewrite ^(.*)?$ $1.php last;
+			break;
+		}
+		
+		if (-e $request_filename.html) {
+			rewrite ^(.*)?$ $1.html last;
+			break;
+		}
+	}
+
+	location ~ \.php$ {
+		fastcgi_split_path_info ^(.+\.php)(/.+)$;
+		
+		# Prevents hacks: https://nealpoole.com/blog/2011/04/setting-up-php-fastcgi-and-nginx-dont-trust-the-tutorials-check-your-configuration/
+		try_files $uri =404;
+		
+		# With php5-fpm:
+		fastcgi_pass 127.0.0.1:9000;
+		include fastcgi.conf;
+		fastcgi_param SCRIPT_FILENAME /nginx/www/controller.php;
+	}
+}
